@@ -1,0 +1,464 @@
+div {
+    box-sizing: border-box;
+}
+
+.cont {
+    width: 1200px;
+    margin: auto;
+}
+
+.biggercont {
+    width: 100%
+}
+
+.center {
+    margin: auto;
+}
+
+.nav {
+    display: flex;
+    font-size: 20px;
+    font-family: metropolisnormal;
+    overflow: hidden;
+    padding: 18px;
+    padding-bottom: 12px;
+    margin-left: -50px;
+    background-color: white;
+    color: grey;
+    list-style-type: none;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    width: 100%; /* Full width */
+}
+.nav li:first-child {
+    margin-right: auto;
+}
+  
+.nav li a {
+    display: block;
+    text-decoration: none;
+    overflow: hidden;
+    padding: 8px;
+    color: gray;
+    list-style-type: none;
+    margin-right: 30px;
+}
+
+li a:hover {
+    color: rgb(65, 65, 65);
+}
+
+.Mariangela {
+    color: black;
+    text-decoration: none;
+    font-size: 64px;
+    font-family: georgiabold;
+    padding-top: 12px;
+    display: inline;
+}
+
+.header {
+    background-color: #c1a1d3;
+    border: 40px solid  #c1a1d3;
+    color: black;
+    margin-left: 300px;
+    margin-right: 65px;
+    margin-top: 100px;
+    text-align: left;
+    padding-top: 64px;
+    padding-bottom: 64px;
+    padding-left: 10px;
+    width: 480px;
+}
+
+.hi {
+    font-size: 28px;
+    font-family: metropolisnormal;
+    color: black;
+}
+
+.mariangelabar {
+    font-size: 25px;
+    font-family: metropolisbold;
+    color: black;
+}
+
+.smallbox {
+    width: 20px;
+    height: 20px;
+    color: #c1a1d3;
+    padding: -2px, 0px, -2px;
+    background-color: #c1a1d3;
+}
+
+.student {
+    font-size: 24px;
+    color: grey;
+    font-family: metropolisnormal;
+}
+
+.image {
+    max-width: 200px;
+    border-radius: 50%;
+    box-shadow: 0px 0px 30px #6c6c6c;
+}
+
+.imagedesc {
+    max-width: 250px;
+    margin-left: 800px;
+    margin-right: 10px;
+    margin-top: -400px;
+    display: block;
+}
+
+.text {
+    color: #706971;
+    size: 64;
+    font-family: metropolisnormal;
+    line-height: 24px;
+}
+
+.boxed {
+    border: 268px solid #7c459c;
+    margin-right: 540px;
+    position: absolute;
+    margin-top: -470px;
+    margin-left: -16px;
+    z-index: -1;
+}
+
+.boxedcirclefrst {
+    border: 280px solid #9a6cb4;
+    margin-right: 540px;
+    position: absolute;
+    margin-top: -470px;
+    margin-left: -160px;
+    z-index: -1;
+    border-radius: 50%
+}
+
+.boxedcirclescnd {
+    border: 100px solid #7c459c;
+    margin-right: 540px;
+    position: absolute;
+    margin-top: -200px;
+    margin-left: 280px;
+    z-index: -1;
+    border-radius: 50%
+}
+
+.line {
+    width: 680px;
+    height: 450px;
+    position: absolute;
+    background: #c1a1d3;
+    margin-top: -500px;
+    margin-left: 1000px;
+    z-index: -1;
+}
+
+.description {
+    margin-top: 150px;
+    text-align: center;
+    align-content: center;
+}
+
+.educationheader{
+    margin-bottom: 130px;
+    justify-content: center;
+    text-align: center;
+    font-size: 50px;
+    margin-left: 260px;
+    font-family: georgiabold;
+    color: black;
+}
+
+.schoolimage {
+    max-width: 400px;
+    margin-top: -238px;
+    margin-left: 150px;
+}
+
+.schooltitle {
+    font-family: metropolisnormal;
+    color: rgb(59, 59, 59);
+    font-size: 20px;
+}
+
+.education {
+    font-family: metropolisbold;
+    padding: 40px 90px 40px;
+    margin-top: 20px;
+    margin-bottom: 35px;
+    background-color: #d2bede;
+}
+
+.educationcontent{
+    text-align: left;
+    margin-left: 600px;
+    margin-top: -400px;
+    margin-bottom: 40px;
+    color: grey;
+    max-width: 500px;
+}
+
+.educationdescription{
+    line-height: 18px;
+    font-family: metropolisskinny;
+    color: grey;
+}
+
+.imagelang {
+    max-width: 80px;
+    margin-top: -150px;
+}
+
+.worksection {
+    background-color: #c1a1d3;
+    font-family: metropolisbold;
+    color: grey;
+    padding-top: 44px;
+    padding-bottom: 60px;
+    margin-top: 40px;
+    margin-bottom: 60px;
+    width: 100%;
+
+}
+
+.workheader {
+    font-size: 48px;
+    margin-bottom: 60px;
+    justify-content: center;
+    text-align: center;
+    font-size: 50px;
+    font-family: georgiabold;
+    color: black;
+}
+
+.skills {
+    font-family: metropolisskinny;
+    color: grey;
+    font-size: 14px;
+    text-align: left;
+    align-items: center;
+    background-color: #f5e1fd;
+    margin-top: 64px;
+    margin-left: 8px;
+}
+
+.jobtitle {
+    font-family: metropolisnormal;
+    color: rgb(59, 59, 59);
+    font-size: 26px;
+
+}
+
+.jobspecifics {
+    color: rgb(59, 59, 59);
+    font-size: 16px;
+    margin-bottom: -8px;
+    font-family: metropolislightitalic;
+}
+
+.jobdescription {
+    line-height: 24px;
+    max-width: 85%;
+    font-family: metropolisskinny;
+}
+
+.other {
+    font-family: metropolisnormal;
+    color: rgb(65, 65, 65);
+    font-size: 24px;
+    text-align: left;
+    align-items: center;
+    display: inline-block;
+    width: 30%;
+    margin: 100px;
+    margin-left: 460px;
+    margin-right: 660px;
+    padding-top: 64px;
+    padding-bottom: 64px;
+}
+
+.box{ 
+    position: relative; 
+    width: 250px; 
+    margin: 0px 12px 16px 12px;
+    align-content: center;
+    padding: 25px; 
+    text-align: center; 
+    background: #c1a1d3; 
+    font-family: quicksandlight;
+    color: rgb(65, 65, 65);
+    font-size: 16px;
+    display: inline-block; 
+    vertical-align: top; 
+}
+
+.white_box{ 
+    height: 350px;
+    width: 500px; 
+    border: 5px solid #e6e6e6; 
+    color: rgb(65, 65, 65);
+    line-height: 24px;
+}
+
+.skillsbox{ 
+    position: relative; 
+    width: 150px;
+    align-content: center;
+    padding: 25px; 
+    text-align: center; 
+    background: white; 
+    font-family: quicksandlight;
+    color: rgb(65, 65, 65);
+    font-size: 16px;
+    display: inline-block; 
+    vertical-align: top; 
+    margin: 100px;
+    margin-left: 250px;
+    margin-right: 660px;
+    padding-top: 64px;
+    padding-bottom: 64px;
+}
+
+.contactsbox{ 
+    position: relative; 
+    width: 150px;
+    align-content: center;
+    padding: 25px; 
+    text-align: center; 
+    background: white; 
+    font-family: quicksandlight;
+    color: rgb(65, 65, 65);
+    font-size: 16px;
+    display: inline-block; 
+    vertical-align: top; 
+    margin: 100px;
+    margin-left: 850px;
+    margin-right: 200px;
+    padding-top: 64px;
+    padding-bottom: 64px;
+    margin-top: -200px;
+}
+
+.liliac_box{ 
+    height: 350px;
+    width: 500px; 
+    border: 5px solid #e6e6e6; 
+    color: rgb(65, 65, 65);
+    line-height: 24px;
+}
+
+.white_box{ 
+    height: 350px;
+    width: 500px; 
+    border: 5px solid #e6e6e6; 
+    color: rgb(65, 65, 65);
+    line-height: 24px;
+}
+
+.boxheader {
+    font-size: 35px;
+    font-family: georgiabold;
+    color: black;
+}
+
+.skilllist {
+    font-size: 18px;
+    line-height: 25px;
+    font-family: metropolisskinny;
+    text-align: left;
+    padding-top: 15px;
+}
+
+.contactslist {
+    font-size: 18px;
+    line-height: 25px;
+    font-family: metropolisskinny;
+    text-align: left;
+    padding-top: 15px;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    width: 90%;
+}
+
+.button {
+    font-family: metropolisskinny;
+    background-color: #e6e6e6;
+    padding: 8px;
+    text-align: center;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #e6e6e6;
+    overflow: hidden;
+    list-style-type: none;
+    font-size: 13px;
+    margin: 4px;
+}
+
+.buttoncontents {
+    color: gray;
+    text-decoration: none;
+    border-color: grey;
+}
+
+.socialbuttons {
+    max-width: 300px;
+}
+
+.textbody {
+    font-family: metropolisskinny;
+    padding-top: 12px;
+  }
+
+.textbodyh3 {
+    font-family: georgiabold;
+    font-size: 18px;
+}
+
+@font-face {
+    font-family: quicksandlightoblique;
+    src: url(fonts/quicksand/Quicksand_Light_Oblique.otf)
+}
+
+@font-face {
+    font-family: quicksandbold;
+    src: url(fonts/quicksand/Quicksand_Bold.otf)
+}
+
+@font-face {
+    font-family: quicksandlight;
+    src: url(fonts/quicksand/Quicksand_Light.otf)
+}
+
+
+@font-face {
+    font-family: metropolisnormal;
+    src: url(fonts/metropolis/Metropolis-Light.otf)
+}
+
+@font-face {
+    font-family: metropolisbold;
+    src: url(fonts/metropolis/Metropolis-Bold.otf)
+}
+
+@font-face {
+    font-family: metropolisskinny;
+    src: url(fonts/metropolis/Metropolis-Thin.otf)
+}
+
+@font-face {
+    font-family: metropolislightitalic;
+    src: url(fonts/metropolis/Metropolis-LightItalic.otf)
+}
+
+@font-face {
+    font-family: georgiabold;
+    src: url(fonts/georgia/georgiabold.ttf)
+}
+
