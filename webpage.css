@@ -175,8 +175,9 @@ li a:hover {
 
 .schoolimage {
     max-width: 400px;
-    margin-top: -238px;
-    margin-left: 150px;
+    margin-top: -100px;
+    margin-bottom: 200px;
+    justify-content: center;
 }
 
 .schooltitle {
@@ -188,7 +189,7 @@ li a:hover {
 .education {
     font-family: metropolisbold;
     padding: 40px 90px 40px;
-    margin-top: 20px;
+    margin-top: 25px;
     margin-bottom: 35px;
     background-color: #d2bede;
 }
@@ -196,10 +197,12 @@ li a:hover {
 .educationcontent{
     text-align: left;
     margin-left: 600px;
-    margin-top: -400px;
+    margin-top: -738px;
+    margin-right: auto;
     margin-bottom: 40px;
     color: grey;
     max-width: 500px;
+    justify-content: left;
 }
 
 .educationdescription{
@@ -345,10 +348,11 @@ li a:hover {
 
 .liliac_box{ 
     height: 350px;
-    width: 500px; 
+    width: 400px; 
     border: 5px solid #e6e6e6; 
     color: rgb(65, 65, 65);
     line-height: 24px;
+    justify-content: right;
 }
 
 .white_box{ 
