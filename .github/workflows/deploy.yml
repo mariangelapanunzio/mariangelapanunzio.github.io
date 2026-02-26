@@ -1,0 +1,38 @@
+name: Deploy React Vite to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout del repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Step 2: Setup Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    # Step 3: Installa dipendenze in modo pulito
+    - name: Install dependencies
+      run: npm ci
+
+    # Step 4: Build del progetto Vite
+    - name: Build project
+      run: npm run build
+
+    # Step 5: Deploy automatico su GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v5
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }} # token automatico GitHub
+        publish_dir: ./dist                       # cartella di build Vite
+        keep_files: false                         # pulisce i file vecchi
+        force_orphan: true                        # evita problemi di storico
