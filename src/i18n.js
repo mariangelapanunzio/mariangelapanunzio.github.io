@@ -37,7 +37,7 @@ i18n.use(initReactI18next).init({
         master_spec: "110L • Specializzazione in AI",
         bachelor_degree: "Laurea Triennale in Informatica e Tecnologie per la Produzione del Software",
         bachelor_spec: "Focus su Software Engineering",
-        diploma: "Diploma Tecnico Indutricale in Informatica e Telecomunicazioni",
+        diploma: "Diploma Tecnico Industriale in Informatica e Telecomunicazioni",
         
         // SKILLS
         skills_arsenal: "Skills&",
