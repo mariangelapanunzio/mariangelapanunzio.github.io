@@ -1,76 +1,244 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FaLinkedin, FaEnvelope, FaGithub, FaArrowRight } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaLinkedin, FaEnvelope, FaGithub, FaTimes, FaPaperPlane } from 'react-icons/fa';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import './i18n';
 
-// Varianti animazione
 const containerVars = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+    show: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
 };
 
 const itemVars = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    hidden: { opacity: 0, y: 25 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", damping: 40, stiffness: 100 } },
 };
 
-// AVATAR SEMPLIFICATO (no rotazione per performance)
-const InteractiveAvatar = ({ mousePosition }) => {
+// Minimal Avatar con smooth animation
+const MinimalAvatar = ({ mousePosition }) => {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (mousePosition) {
       setTilt({
-        x: (mousePosition.y / window.innerHeight - 0.5) * 8,
-        y: (mousePosition.x / window.innerWidth - 0.5) * 8,
+        x: (mousePosition.y / window.innerHeight - 0.5) * 2,
+        y: (mousePosition.x / window.innerWidth - 0.5) * 2,
       });
     }
   }, [mousePosition]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      style={{
-        rotateX: tilt.x,
-        rotateY: tilt.y,
-      }}
-      className="relative w-full h-full"
+      transition={{ type: "spring", damping: 30, stiffness: 100 }}
+      style={{ rotateX: tilt.x, rotateY: tilt.y }}
+      className="relative w-full h-full perspective"
     >
-      {/* Glow dinamico */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-[2rem] rotate-6 opacity-50 blur-3xl animate-pulse" />
-      
-      {/* Foto */}
-      <div className="absolute inset-0 bg-gradient-to-br from-neutral-200 to-neutral-300 dark:from-neutral-800 dark:to-neutral-900 rounded-[2rem] overflow-hidden shadow-2xl border-2 border-white/20 dark:border-white/10">
-        <img
-          src="/mp.png"
-          alt="Mariangela"
-          className="w-full h-full object-cover brightness-100 dark:brightness-95 hover:scale-110 transition-transform duration-700"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      <div className="absolute inset-0 rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-50 via-neutral-100 to-neutral-200 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 shadow-2xl">
+        <img src="/mp.png" alt="Mariangela" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 dark:from-black/30 via-transparent to-transparent" />
       </div>
     </motion.div>
   );
 };
 
-// Componente SkipToContent
+// AI Widget - Apple Style
+const AIWidget = ({ lang, dark }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isSmiling, setIsSmiling] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef(null);
+
+  const aiResponses = {
+    it: {
+      greeting: "Ciao! Sono Mariangela, AI Expert. Come posso aiutarti?",
+      skills: "Python • React • TypeScript • Node.js • Machine Learning • Azure • GCP",
+      passion: "Mi piace creare esperienze che uniscono design e intelligenza artificiale.",
+      fun: "Fun fact: Questo portfolio è costruito con AI! 🤖",
+      default: "Domanda interessante! Contattami per saperne di più."
+    },
+    en: {
+      greeting: "Hi! I'm Mariangela, AI Expert. How can I help?",
+      skills: "Python • React • TypeScript • Node.js • Machine Learning • Azure • GCP",
+      passion: "I love creating experiences that blend design and artificial intelligence.",
+      fun: "Fun fact: This portfolio is built with AI! 🤖",
+      default: "Great question! Feel free to contact me to discuss more."
+    }
+  };
+
+  const handleMessage = (text) => {
+    const triggers = {
+      it: { chi: 'greeting', skill: 'skills', passione: 'passion', divertente: 'fun' },
+      en: { who: 'greeting', skill: 'skills', passion: 'passion', fun: 'fun' }
+    };
+    
+    const text_lower = text.toLowerCase();
+    let key = 'default';
+    
+    for (const [trigger, k] of Object.entries(triggers[lang] || {})) {
+      if (text_lower.includes(trigger)) { key = k; break; }
+    }
+
+    setMessages(prev => [
+      ...prev,
+      { type: 'user', text },
+      { type: 'ai', text: aiResponses[lang][key] }
+    ]);
+  };
+
+  const startCamera = async () => {
+    setShowCamera(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        let count = 0;
+        const interval = setInterval(() => {
+          setIsSmiling(Math.random() > 0.4);
+          count++;
+          if (count > 8) {
+            clearInterval(interval);
+            stream.getTracks().forEach(t => t.stop());
+            setShowCamera(false);
+            setIsSmiling(false);
+          }
+        }, 800);
+      }
+    } catch (err) {
+      setShowCamera(false);
+    }
+  };
+
+  return (
+    <>
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.5 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-20 md:right-24 w-12 h-12 md:w-14 md:h-14 rounded-full bg-neutral-950 dark:bg-neutral-100 text-neutral-50 dark:text-neutral-950 shadow-2xl transition-all flex items-center justify-center text-lg font-bold hover:shadow-2xl"
+      >
+        ✨
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 z-30 bg-black/20 dark:bg-black/40 backdrop-blur-sm"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 30 }}
+              transition={{ type: "spring", damping: 25, stiffness: 150 }}
+              className="fixed bottom-24 md:bottom-32 right-4 md:right-6 w-80 md:w-96 h-[520px] rounded-3xl bg-white dark:bg-neutral-950 border border-neutral-200/50 dark:border-neutral-800/50 shadow-2xl z-40 flex flex-col overflow-hidden"
+            >
+              <div className="p-5 md:p-6 border-b border-neutral-200/50 dark:border-neutral-800/50 flex justify-between items-center backdrop-blur-xl bg-neutral-50/50 dark:bg-neutral-900/50">
+                <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">AI Assistant</h3>
+                <motion.button 
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsOpen(false)} 
+                  className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                >
+                  <FaTimes size={16} className="text-neutral-600 dark:text-neutral-400" />
+                </motion.button>
+              </div>
+
+              {!showCamera ? (
+                <>
+                  <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-4 bg-neutral-50/50 dark:bg-neutral-900/50">
+                    {messages.length === 0 ? (
+                      <div className="text-center text-neutral-600 dark:text-neutral-400 text-sm pt-8">
+                        <p className="mb-8 text-base font-medium text-neutral-900 dark:text-neutral-100">Ask me anything</p>
+                        <div className="space-y-3">
+                          {['Chi sei?', 'Quali skill?', 'Dimmi di te'].map(q => (
+                            <motion.button 
+                              key={q} 
+                              whileHover={{ scale: 1.02, backgroundColor: 'rgba(0,0,0,0.05)' }}
+                              onClick={() => handleMessage(q)} 
+                              className="block w-full p-3.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm text-neutral-700 dark:text-neutral-300 font-medium"
+                            >
+                              {q}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      messages.map((msg, idx) => (
+                        <motion.div 
+                          key={idx} 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ type: "spring", damping: 30 }}
+                          className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-xs px-4 py-2.5 rounded-2xl text-sm ${msg.type === 'user' ? 'bg-neutral-900 dark:bg-neutral-100 text-neutral-50 dark:text-neutral-900' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100'}`}>
+                            {msg.text}
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="p-5 md:p-6 border-t border-neutral-200/50 dark:border-neutral-800/50 space-y-3 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-xl">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && input.trim() && (handleMessage(input), setInput(''))}
+                        placeholder="Type..."
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-100 transition-all text-sm"
+                      />
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => input.trim() && (handleMessage(input), setInput(''))} 
+                        className="p-2.5 rounded-xl bg-neutral-900 dark:bg-neutral-100 text-neutral-50 dark:text-neutral-950 hover:opacity-80 transition-opacity"
+                      >
+                        <FaPaperPlane size={14} />
+                      </motion.button>
+                    </div>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      onClick={startCamera} 
+                      className="w-full px-4 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 font-medium text-sm hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                    >
+                      📷 Detect Smile
+                    </motion.button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-6">
+                  <video ref={videoRef} autoPlay playsInline className="w-40 h-40 rounded-2xl object-cover mb-4 border border-neutral-200 dark:border-neutral-700" />
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">{isSmiling ? '😊 Smile detected!' : '📹 Look at camera'}</p>
+                  {isSmiling && <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} className="text-3xl">✨</motion.div>}
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
 const SkipToContent = ({ t }) => (
-    <a 
-      href="#main-content" 
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-pink-500 focus:text-white focus:rounded-lg focus:font-bold text-sm"
-    >
+    <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-neutral-900 focus:text-white focus:rounded-lg focus:font-bold">
       {t('skip_to_content')}
     </a>
-);
-
-// Noise Overlay
-const NoiseOverlay = () => (
-    <div 
-      className="fixed inset-0 z-50 pointer-events-none opacity-[0.05] mix-blend-overlay" 
-      style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}
-      aria-hidden="true"
-    />
 );
 
 export default function App() {
@@ -81,16 +249,11 @@ export default function App() {
     const [mousePosition, setMousePosition] = useState(null);
     const { t, i18n } = useTranslation();
     const lang = i18n.language;
+    const { scrollYProgress } = useScroll();
 
-    // Gestione tema
     useEffect(() => {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme) {
-        setDark(savedTheme === 'dark');
-      } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setDark(prefersDark);
-      }
+      setDark(savedTheme ? savedTheme === 'dark' : true);
     }, []);
 
     useEffect(() => {
@@ -98,23 +261,18 @@ export default function App() {
       localStorage.setItem('theme', dark ? 'dark' : 'light');
     }, [dark]);
 
-    // Mouse tracking per avatar
     useEffect(() => {
-      const handleMouseMove = (e) => {
-        setMousePosition({ x: e.clientX, y: e.clientY });
-      };
+      const handleMouseMove = (e) => setMousePosition({ x: e.clientX, y: e.clientY });
       window.addEventListener('mousemove', handleMouseMove);
       return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    // Scroll progress
     useEffect(() => {
       let ticking = false;
       const updateScrollProgress = () => {
         const scrollPx = document.documentElement.scrollTop;
         const winHeightPx = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (scrollPx / winHeightPx) * 100;
-        setScrollProgress(scrolled);
+        setScrollProgress((scrollPx / winHeightPx) * 100);
         setShowScrollTop(scrollPx > 300);
         ticking = false;
       };
@@ -130,16 +288,8 @@ export default function App() {
       return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    // Menu mobile
     useEffect(() => {
-      if (isMenuOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
-      }
-      return () => {
-        document.body.style.overflow = '';
-      };
+      document.body.style.overflow = isMenuOpen ? 'hidden' : '';
     }, [isMenuOpen]);
 
     const experiences = [
@@ -153,313 +303,513 @@ export default function App() {
     ];
 
     return (
-      <div 
-        className={`min-h-screen selection:bg-pink-500 selection:text-white transition-colors duration-700 font-sans ${dark ? 'bg-[#050505] text-gray-100' : 'bg-white text-gray-900'}`}
-        lang={lang}
-      >
+      <div className={`min-h-screen transition-colors duration-500 ${dark ? 'bg-black text-white' : 'bg-white text-black'}`} style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif' }} lang={lang}>
         <SkipToContent t={t} />
-        <NoiseOverlay />
 
-        {/* Background */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-[30%] -left-[20%] w-[80vw] h-[80vw] bg-purple-500/20 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-lighten opacity-40 animate-pulse will-change-transform" />
-          <div className="absolute top-[10%] -right-[20%] w-[70vw] h-[70vw] bg-pink-500/20 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-lighten opacity-40 will-change-transform" />
-          <div className="absolute bottom-0 left-[10%] w-[60vw] h-[60vw] bg-blue-500/20 rounded-full blur-[120px] mix-blend-screen dark:mix-blend-lighten opacity-30 will-change-transform" />
-        </div>
-
-        {/* Progress Bar */}
-        <div 
-          className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 origin-left z-50"
-          style={{ transform: `scaleX(${scrollProgress / 100})` }}
+        {/* Progress bar */}
+        <motion.div 
+          className={`fixed top-0 left-0 right-0 h-0.5 z-50 ${dark ? 'bg-white' : 'bg-black'} origin-left`}
+          style={{ scaleX: scrollYProgress }}
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-3 xs:px-4 sm:px-6 md:px-12 py-4 xs:py-6 md:py-12 space-y-12 xs:space-y-16 sm:space-y-20 md:space-y-32">
-          
-          {/* HEADER */}
-          <header className="flex justify-between items-center backdrop-blur-md bg-white/80 dark:bg-black/20 border border-neutral-300 dark:border-white/10 rounded-2xl xs:rounded-2xl md:rounded-full px-3 xs:px-4 md:px-6 py-2.5 xs:py-3 md:py-4 sticky top-3 z-40 shadow-lg">
-            <h1 className="text-xs xs:text-sm md:text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 truncate">
+        {/* Header */}
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", damping: 30, stiffness: 100 }}
+          className="fixed top-0 left-0 right-0 z-40 px-4 md:px-8 py-4 md:py-5 border-b border-neutral-200/30 dark:border-neutral-800/30 backdrop-blur-2xl bg-white/70 dark:bg-black/70"
+        >
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <motion.h1 
+              className="text-base md:text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-50"
+            >
               {t('name')}
-            </h1>
+            </motion.h1>
             
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex gap-6 items-center font-medium text-sm">
-              <button 
+            <nav className="hidden md:flex gap-12 items-center text-sm text-neutral-600 dark:text-neutral-400">
+              <motion.button 
+                whileHover={{ color: dark ? '#f5f5f5' : '#000' }}
                 onClick={() => i18n.changeLanguage('it')} 
-                className={`hover:text-pink-500 transition ${lang === 'it' ? 'text-pink-500 font-bold' : 'text-gray-700 dark:text-gray-300'}`}
+                className={`transition-colors ${lang === 'it' ? (dark ? 'text-white' : 'text-black') + ' font-semibold' : ''}`}
               >
                 IT
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ color: dark ? '#f5f5f5' : '#000' }}
                 onClick={() => i18n.changeLanguage('en')} 
-                className={`hover:text-pink-500 transition ${lang === 'en' ? 'text-pink-500 font-bold' : 'text-gray-700 dark:text-gray-300'}`}
+                className={`transition-colors ${lang === 'en' ? (dark ? 'text-white' : 'text-black') + ' font-semibold' : ''}`}
               >
                 EN
-              </button>
-              <button 
-                onClick={() => setDark(!dark)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-800 hover:scale-110 transition text-lg"
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setDark(!dark)} 
+                className="p-2.5 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors text-lg"
               >
-                {dark ? '🌞' : '🌚'}
-              </button>
+                {dark ? '☀️' : '🌙'}
+              </motion.button>
             </nav>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:scale-105 transition flex-shrink-0"
+            <motion.button 
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="md:hidden p-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
             >
-              <span className={`w-4 h-0.5 bg-current transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-              <span className={`w-4 h-0.5 bg-current transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
-              <span className={`w-4 h-0.5 bg-current transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-            </button>
-          </header>
+              <div className="w-5 h-4 flex flex-col justify-between">
+                <span className={`w-5 h-0.5 bg-current transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+                <span className={`w-5 h-0.5 bg-current transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
+                <span className={`w-5 h-0.5 bg-current transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+              </div>
+            </motion.button>
+          </div>
+        </motion.header>
 
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {isMenuOpen && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="md:hidden fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center gap-6 pt-20"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <nav className="flex flex-col items-center gap-4 text-lg font-bold">
-                  <a href="#education" onClick={() => setIsMenuOpen(false)} className="hover:text-pink-500 transition">{t('education_title')}</a>
-                  <a href="#experiences" onClick={() => setIsMenuOpen(false)} className="hover:text-pink-500 transition">{t('experiences_title')}</a>
-                  <a href="#skills" onClick={() => setIsMenuOpen(false)} className="hover:text-pink-500 transition">{t('skills_title')}</a>
-                  <a href="#contact" onClick={() => setIsMenuOpen(false)} className="hover:text-pink-500 transition">Contact</a>
-                </nav>
-                <div className="flex gap-4 items-center text-base">
-                  <button onClick={() => { i18n.changeLanguage('it'); setIsMenuOpen(false); }} className={`font-medium ${lang === 'it' ? 'text-pink-500 font-bold' : ''}`}>IT</button>
-                  <button onClick={() => { i18n.changeLanguage('en'); setIsMenuOpen(false); }} className={`font-medium ${lang === 'en' ? 'text-pink-500 font-bold' : ''}`}>EN</button>
-                  <button onClick={() => { setDark(!dark); setIsMenuOpen(false); }} className="text-xl">{dark ? '🌞' : '🌚'}</button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 bg-white dark:bg-black z-30 flex flex-col items-center justify-center gap-8 pt-20"
+            >
+              <nav className="flex flex-col items-center gap-8 text-xl font-medium text-neutral-900 dark:text-neutral-100">
+                <motion.a 
+                  whileHover={{ scale: 1.05 }}
+                  href="#education" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('education_title')}
+                </motion.a>
+                <motion.a 
+                  whileHover={{ scale: 1.05 }}
+                  href="#experiences" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('experiences_title')}
+                </motion.a>
+                <motion.a 
+                  whileHover={{ scale: 1.05 }}
+                  href="#skills" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('skills_title')}
+                </motion.a>
+                <motion.a 
+                  whileHover={{ scale: 1.05 }}
+                  href="#contact" 
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact
+                </motion.a>
+              </nav>
+              <div className="flex gap-8 text-neutral-600 dark:text-neutral-400">
+                <motion.button 
+                  whileHover={{ color: dark ? '#fff' : '#000' }}
+                  onClick={() => { i18n.changeLanguage('it'); setIsMenuOpen(false); }} 
+                  className={`font-semibold ${lang === 'it' ? (dark ? 'text-white' : 'text-black') : ''}`}
+                >
+                  IT
+                </motion.button>
+                <motion.button 
+                  whileHover={{ color: dark ? '#fff' : '#000' }}
+                  onClick={() => { i18n.changeLanguage('en'); setIsMenuOpen(false); }} 
+                  className={`font-semibold ${lang === 'en' ? (dark ? 'text-white' : 'text-black') : ''}`}
+                >
+                  EN
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* MAIN */}
-          <main id="main-content">
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.1 }} variants={containerVars} className='space-y-12 xs:space-y-16 sm:space-y-20 md:space-y-32'>
+        {/* Main */}
+        <div className="relative pt-20 md:pt-24 max-w-7xl mx-auto px-4 md:px-8 pb-24">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.1 }} variants={containerVars} className="space-y-32 md:space-y-48">
 
-              {/* HERO */}
-              <motion.section variants={itemVars} className="grid lg:grid-cols-2 gap-4 xs:gap-6 lg:gap-12 items-center min-h-[50vh] xs:min-h-[60vh] md:min-h-[70vh]">
-                <div className="space-y-4 xs:space-y-6 md:space-y-8 order-2 lg:order-1">
-                  <motion.div variants={itemVars} className="inline-block px-2.5 xs:px-3 md:px-4 py-1 xs:py-1.5 rounded-full border border-pink-500/30 bg-pink-500/10 text-pink-500 text-[10px] xs:text-xs font-bold uppercase tracking-widest">
-                    {t('available')}
-                  </motion.div>
+            {/* HERO - Ultra Modern 2026 */}
+            <motion.section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32 md:pt-20">
+              {/* Animated gradient background */}
+              <motion.div
+                animate={{ 
+                  background: [
+                    "radial-gradient(circle at 20% 50%, rgba(0,0,0,0.1) 0%, transparent 50%)",
+                    "radial-gradient(circle at 80% 50%, rgba(0,0,0,0.1) 0%, transparent 50%)",
+                    "radial-gradient(circle at 20% 50%, rgba(0,0,0,0.1) 0%, transparent 50%)"
+                  ]
+                }}
+                transition={{ duration: 8, repeat: Infinity }}
+                className="absolute inset-0 dark:bg-gradient-to-br dark:from-neutral-900 dark:via-black dark:to-neutral-900 bg-gradient-to-br from-neutral-50 via-white to-neutral-100"
+              />
+
+              {/* Animated grid background */}
+              <div className="absolute inset-0 opacity-20 dark:opacity-10">
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_1px,rgba(0,0,0,.05)_1px),linear-gradient(180deg,transparent_1px,rgba(0,0,0,.05)_1px)] dark:bg-[linear-gradient(90deg,transparent_1px,rgba(255,255,255,.03)_1px),linear-gradient(180deg,transparent_1px,rgba(255,255,255,.03)_1px)] bg-[size:50px_50px]" />
+              </div>
+
+              {/* Floating orbs */}
+              <motion.div
+                animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
+                transition={{ duration: 6, repeat: Infinity }}
+                className="absolute top-20 right-10 w-64 h-64 rounded-full bg-gradient-to-br from-neutral-950/20 dark:from-neutral-50/10 to-transparent blur-3xl"
+              />
+              <motion.div
+                animate={{ y: [0, 20, 0], x: [0, -10, 0] }}
+                transition={{ duration: 8, repeat: Infinity }}
+                className="absolute bottom-20 left-10 w-80 h-80 rounded-full bg-gradient-to-tr from-neutral-950/20 dark:from-neutral-50/10 to-transparent blur-3xl"
+              />
+
+              {/* Main content */}
+              <div className="relative z-10 w-full">
+                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center px-4 md:px-8 max-w-7xl mx-auto">
                   
-                  <motion.h2 variants={itemVars} className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight xs:leading-tight md:leading-[0.9]">
-                    {t('hero_title_1')} <br />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
-                      {t('hero_title_2')}
-                    </span>
-                  </motion.h2>
-                  
-                  <motion.p variants={itemVars} className="text-sm xs:text-base sm:text-lg md:text-xl text-neutral-700 dark:text-neutral-400 max-w-lg leading-relaxed">
-                    {t('hero_subtitle')}
-                  </motion.p>
-                  
-                  <motion.div variants={itemVars} className="flex flex-col xs:flex-row gap-2.5 xs:gap-3 pt-2 xs:pt-4">
-                    <a 
-                      href="#contact" 
-                      className="group relative px-4 xs:px-6 md:px-8 py-2.5 xs:py-3 md:py-4 bg-white dark:bg-white text-black font-bold rounded-lg xs:rounded-xl md:rounded-2xl overflow-hidden transition-all hover:scale-105 shadow-lg hover:shadow-xl text-center text-xs xs:text-sm md:text-base"
-                    >
-                      <span className="relative flex items-center justify-center gap-2">
-                        {t('cta_talk')} <FaArrowRight className="-rotate-45 group-hover:rotate-0 transition-transform text-xs xs:text-sm"/>
-                      </span>
-                    </a>
-                    <a 
-                      href="/resume.pdf" 
-                      className="px-4 xs:px-6 md:px-8 py-2.5 xs:py-3 md:py-4 rounded-lg xs:rounded-xl md:rounded-2xl border-2 border-neutral-400 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition font-medium text-center text-xs xs:text-sm md:text-base text-neutral-900 dark:text-white"
-                      download
-                    >
-                      {t('cta_resume')}
-                    </a>
-                  </motion.div>
-                </div>
+                  {/* Left: Image - Ultra Modern */}
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8, x: -100 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 80, delay: 0.2 }}
+                    className="relative order-first lg:order-last flex justify-center items-center perspective"
+                  >
+                    <div className="relative w-72 h-96 sm:w-80 sm:h-[500px] md:w-96 md:h-[520px]">
+                      
+                      {/* Outer glow layers */}
+                      <motion.div
+                        animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="absolute -inset-8 rounded-3xl bg-gradient-to-br from-neutral-950 dark:from-neutral-50 via-transparent to-neutral-900 dark:to-neutral-100 blur-2xl"
+                      />
+                      
+                      {/* Inner glass layer */}
+                      <div className="absolute inset-0 rounded-3xl bg-white/10 dark:bg-black/10 backdrop-blur-xl border border-white/20 dark:border-white/10 overflow-hidden">
+                        {/* Image with parallax */}
+                        <motion.img 
+                          src="/mp.png" 
+                          alt="Mariangela" 
+                          className="w-full h-full object-cover"
+                          whileHover={{ scale: 1.08 }}
+                          transition={{ duration: 0.5 }}
+                        />
+                        
+                        {/* Overlay gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                        
+                        {/* Shine effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+                      </div>
 
-                {/* AVATAR */}
-                <motion.div variants={itemVars} className="relative flex justify-center lg:justify-end order-1 lg:order-2">
-                  <div className="w-48 h-48 xs:w-56 xs:h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-96">
-                    <InteractiveAvatar mousePosition={mousePosition} />
-                    <div className="absolute bottom-3 xs:bottom-4 left-3 xs:left-4 right-3 xs:right-4 text-white z-10 text-center">
-                      <p className="text-[10px] xs:text-xs uppercase tracking-widest opacity-80">{t('based_in')}</p>
-                      <p className="text-xs xs:text-sm md:text-base font-bold">{t('city')}</p>
+                      {/* Floating elements around image */}
+                      <motion.div
+                        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+                        transition={{ duration: 5, repeat: Infinity }}
+                        className="absolute -top-10 -right-10 px-5 py-3 rounded-full backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/20"
+                      >
+                        <span className="text-sm font-bold text-neutral-900 dark:text-neutral-50">⚡ Creative</span>
+                      </motion.div>
+
+                      <motion.div
+                        animate={{ y: [0, 15, 0], rotate: [0, -5, 0] }}
+                        transition={{ duration: 5, repeat: Infinity, delay: 0.2 }}
+                        className="absolute -bottom-10 -left-10 px-5 py-3 rounded-full backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/20"
+                      >
+                        <span className="text-sm font-bold text-neutral-900 dark:text-neutral-50">🤖 AI Expert</span>
+                      </motion.div>
                     </div>
-                  </div>
-                </motion.div>
-              </motion.section>
+                  </motion.div>
 
-              {/* EDUCATION */}
-              <motion.section 
-                initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} variants={containerVars}
-                id="education" 
-                className="relative space-y-6 xs:space-y-8 md:space-y-12 py-6 xs:py-8 md:py-10"
-              >
-                <div className="flex flex-col items-center text-center mb-8 xs:mb-10 md:mb-16">
-                  <motion.h3 variants={itemVars} className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 xs:mb-4">
-                    {t('education_title')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">{t('education_highlight')}</span>
-                  </motion.h3>
-                  <motion.div variants={itemVars} className="h-1 w-16 xs:w-20 md:w-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
-                </div>
+                  {/* Right: Content - Ultra Bold */}
+                  <motion.div 
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 100, delay: 0.3 }}
+                    className="order-last lg:order-first space-y-8 md:space-y-12 py-8"
+                  >
+                    
+                    {/* Status indicator */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="inline-flex items-center gap-3 px-5 py-3 rounded-full backdrop-blur-xl bg-white/30 dark:bg-black/30 border border-white/40 dark:border-white/20 w-fit"
+                    >
+                      <motion.div 
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-3 h-3 rounded-full bg-gradient-to-r from-neutral-950 to-neutral-700 dark:from-neutral-100 dark:to-neutral-300"
+                      />
+                      <span className="text-xs md:text-sm font-bold text-neutral-900 dark:text-neutral-100">{t('available')}</span>
+                    </motion.div>
 
-                <div className="relative max-w-4xl mx-auto">
-                  <div className="absolute left-[10px] xs:left-[12px] md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-neutral-400 dark:via-neutral-700 to-transparent md:-translate-x-1/2" />
+                    {/* Main heading with staggered letters */}
+                    <motion.div className="space-y-6">
+                      <div className="overflow-hidden">
+                        <motion.h1 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] text-neutral-950 dark:text-neutral-50"
+                        >
+                          <motion.span
+                            initial={{ y: 100, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ type: "spring", damping: 30, delay: 0.6 }}
+                            className="block"
+                          >
+                            {t('name').split(' ')[0]}
+                          </motion.span>
+                          <motion.span
+                            initial={{ y: 100, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ type: "spring", damping: 30, delay: 0.7 }}
+                            className="block bg-clip-text text-transparent bg-gradient-to-r from-neutral-950 dark:from-neutral-50 via-neutral-700 dark:via-neutral-300 to-neutral-950 dark:to-neutral-50"
+                          >
+                            {t('name').split(' ')[1]}
+                          </motion.span>
+                        </motion.h1>
+                      </div>
 
-                  {[
-                    { title: t('master_degree'), uni: 'Università degli Studi di Bari "Aldo Moro"', spec: t('master_spec'), time: '2022 — 2024', color: 'pink' },
-                    { title: t('bachelor_degree'), uni: 'Università degli Studi di Bari "Aldo Moro"', spec: t('bachelor_spec'), time: '2019 — 2022', color: 'purple' },
-                    { title: t('diploma'), uni: 'I.I.S.S. Galileo Ferraris', spec: '', time: '2014 — 2019', color: 'indigo' },
-                  ].map((item, idx) => (
-                    <motion.article variants={itemVars} key={idx} className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-2 xs:gap-3 md:gap-8 mb-6 xs:mb-8 md:mb-12 last:mb-0">
-                      {/* Text */}
-                      <div className="md:text-right md:pr-12 md:order-1 min-w-0">
-                        <h4 className="text-[10px] xs:text-xs sm:text-sm md:text-xl font-bold text-neutral-900 dark:text-white leading-tight break-words line-clamp-2">{item.title}</h4>
-                        <p className={`text-[11px] xs:text-xs md:text-sm font-medium mt-0.5 xs:mt-1 ${item.color === 'pink' ? 'text-pink-500' : item.color === 'purple' ? 'text-purple-500' : 'text-indigo-500'}`}>{item.uni}</p>
-                        {item.spec && <p className="text-[11px] xs:text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 xs:mt-1">{item.spec}</p>}
+                      {/* Animated underline */}
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ delay: 0.8, duration: 0.8 }}
+                        className="h-1.5 bg-gradient-to-r from-neutral-950 dark:from-neutral-50 via-neutral-700 dark:via-neutral-300 to-transparent rounded-full max-w-xs"
+                      />
+                    </motion.div>
+
+                    {/* Subtitle with role */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="space-y-4"
+                    >
+                      <div className="text-lg md:text-xl lg:text-2xl font-light text-neutral-700 dark:text-neutral-300">
+                        <span className="block mb-2">{t('hero_title_1')}</span>
+                        <span className="font-black text-3xl md:text-4xl lg:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-neutral-950 dark:from-neutral-50 via-neutral-700 dark:via-neutral-300 to-neutral-900 dark:to-neutral-100">
+                          {t('hero_title_2')}
+                        </span>
                       </div>
                       
-                      {/* Dot */}
-                      <div className="absolute left-[10px] xs:left-[12px] md:left-1/2 top-1 xs:top-1.5 md:top-auto md:-translate-x-1/2 w-5 h-5 xs:w-6 xs:h-6 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#111] border-3 xs:border-4 border-neutral-300 dark:border-neutral-700 z-20 md:order-2 flex items-center justify-center shadow-lg flex-shrink-0">
-                        <div className={`w-1.5 h-1.5 xs:w-2 xs:h-2 rounded-full ${item.color === 'pink' ? 'bg-pink-500' : item.color === 'purple' ? 'bg-purple-500' : 'bg-indigo-500'}`} />
-                      </div>
-
-                      {/* Time */}
-                      <div className="pl-7 xs:pl-8 md:pl-0 md:order-3 md:flex md:items-center">
-                        <time className="inline-block px-2.5 xs:px-3 py-0.5 xs:py-1 rounded-full text-[10px] xs:text-xs md:text-sm font-bold border backdrop-blur-md" 
-                          style={{
-                            backgroundColor: item.color === 'pink' ? 'rgba(236, 72, 153, 0.15)' : item.color === 'purple' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(99, 102, 241, 0.15)',
-                            borderColor: item.color === 'pink' ? 'rgba(236, 72, 153, 0.4)' : item.color === 'purple' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(99, 102, 241, 0.4)',
-                            color: item.color === 'pink' ? '#ec4899' : item.color === 'purple' ? '#a855f7' : '#6366f1'
-                          }}>
-                          {item.time}
-                        </time>
-                      </div>
-                    </motion.article>
-                  ))}
-                </div>
-              </motion.section>
-
-              {/* EXPERIENCES */}
-              <motion.section 
-                initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars}
-                id="experiences" 
-                className="space-y-6 xs:space-y-8 md:space-y-12"
-              >
-                <motion.h3 variants={itemVars} className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-                  {t('experiences_title')}
-                </motion.h3>
-
-                <div className="grid md:grid-cols-2 gap-3 xs:gap-4 md:gap-6">
-                  {experiences.map((exp, idx) => (
-                    <motion.article
-                      key={idx}
-                      variants={itemVars}
-                      className="relative p-4 xs:p-6 md:p-8 rounded-lg xs:rounded-2xl bg-white dark:bg-white/5 backdrop-blur-xl border border-neutral-300 dark:border-white/10 hover:border-pink-400 dark:hover:border-pink-500/30 hover:shadow-xl hover:-translate-y-1 transition-all"
-                    >
-                      <div className="flex flex-col xs:flex-row xs:justify-between xs:items-start gap-2 xs:gap-0 mb-3 xs:mb-4">
-                        <h4 className="text-xs xs:text-lg md:text-xl font-bold text-pink-500">{exp.role}</h4>
-                        <span className="text-[10px] xs:text-xs md:text-sm font-mono text-neutral-500 dark:text-neutral-400 whitespace-nowrap">{exp.time}</span>
-                      </div>
-                      <p className="text-xs xs:text-base md:text-lg font-medium mb-2 xs:mb-3 text-neutral-900 dark:text-gray-100">{exp.company}</p>
-                      <p className="text-xs xs:text-sm md:text-base text-neutral-700 dark:text-neutral-300 mb-4 xs:mb-6 leading-relaxed">{exp.desc}</p>
-                      <div className="flex flex-wrap gap-1.5 xs:gap-2">
-                        {exp.tags.map(tag => (
-                          <span key={tag} className="px-2 xs:px-3 py-0.5 xs:py-1 text-[10px] xs:text-xs md:text-sm font-semibold rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-300">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </motion.article>
-                  ))}
-                </div>
-              </motion.section>
-
-              {/* SKILLS */}
-              <motion.section 
-                initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars}
-                id="skills" 
-                className="space-y-6 xs:space-y-8 md:space-y-12"
-              >
-                <motion.h3 variants={itemVars} className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-center md:text-right">
-                  {t('skills_arsenal')} <span className="text-pink-500">{t('skills_title')}</span>
-                </motion.h3>
-                
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 xs:gap-3 md:gap-4">
-                  {["React", "Next.js", "TypeScript", "Tailwind", "Node.js", "Framer", "Three.js", "Python", "Figma", "Git", "GraphQL", "Docker"].map((s) => (
-                    <motion.div 
-                      key={s} 
-                      variants={itemVars}
-                      whileHover={{ scale: 1.05 }}
-                      className="h-20 xs:h-24 md:h-28 flex flex-col justify-between p-2.5 xs:p-3 md:p-4 rounded-lg xs:rounded-xl md:rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-300 dark:border-neutral-800 hover:border-pink-400 dark:hover:border-pink-500/50 transition-all cursor-default shadow-sm dark:shadow-none"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500" />
-                      <span className="font-semibold text-[11px] xs:text-xs md:text-base text-neutral-900 dark:text-white">{s}</span>
+                      <p className="text-base md:text-lg text-neutral-600 dark:text-neutral-400 max-w-lg leading-relaxed font-light pt-4">
+                        {t('hero_subtitle')}
+                      </p>
                     </motion.div>
-                  ))}
+
+                    {/* CTA Section */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                      className="flex flex-col xs:flex-row gap-4 md:gap-5 pt-6 md:pt-10"
+                    >
+                      <motion.a 
+                        whileHover={{ scale: 1.05, y: -4 }}
+                        whileTap={{ scale: 0.95 }}
+                        href="#contact" 
+                        className="group relative px-8 md:px-10 py-5 md:py-6 bg-neutral-950 dark:bg-neutral-50 text-white dark:text-black font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all text-center text-sm md:text-base overflow-hidden"
+                      >
+                        <motion.div 
+                          className="absolute inset-0 bg-gradient-to-r from-neutral-800 to-neutral-950 dark:from-neutral-200 dark:to-neutral-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                        <span className="relative">{t('cta_talk')} →</span>
+                      </motion.a>
+                      
+                      <motion.a 
+                        whileHover={{ scale: 1.05, y: -4 }}
+                        whileTap={{ scale: 0.95 }}
+                        href="/resume.pdf" 
+                        className="px-8 md:px-10 py-5 md:py-6 border-2 border-neutral-950 dark:border-neutral-50 text-neutral-950 dark:text-neutral-50 font-bold rounded-2xl hover:bg-neutral-100/50 dark:hover:bg-neutral-900/50 backdrop-blur transition-all text-center text-sm md:text-base"
+                        download
+                      >
+                        {t('cta_resume')}
+                      </motion.a>
+                    </motion.div>
+
+                    {/* Stats */}
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8 }}
+                      className="grid grid-cols-3 gap-6 pt-10 md:pt-16 border-t border-neutral-300/30 dark:border-neutral-700/30"
+                    >
+                      {[
+                        { value: '10+', label: 'Projects' },
+                        { value: '3+', label: 'Years' },
+                        { value: 'AI', label: 'Expert' }
+                      ].map((stat, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ scale: 1.05 }}
+                          className="text-center"
+                        >
+                          <p className="text-2xl md:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-neutral-950 dark:from-neutral-50 via-neutral-700 dark:via-neutral-300 to-neutral-900 dark:to-neutral-100">
+                            {stat.value}
+                          </p>
+                          <p className="text-xs md:text-sm opacity-60 text-neutral-700 dark:text-neutral-400 font-medium pt-2">
+                            {stat.label}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </motion.div>
                 </div>
-              </motion.section>
+              </div>
+            </motion.section>
 
-              {/* CONTACT */}
-              <motion.section 
-                initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars}
-                id="contact" 
-                className="relative py-8 xs:py-12 md:py-20"
-              >
-                <div className="relative bg-white dark:bg-neutral-900/50 rounded-xl xs:rounded-2xl md:rounded-3xl p-6 xs:p-10 md:p-16 text-center border border-neutral-300 dark:border-white/10 overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-indigo-500/5 dark:from-pink-500/10 dark:via-purple-500/10 dark:to-indigo-500/10 opacity-0 group-hover:opacity-100 transition duration-700" />
+            {/* Education */}
+            <motion.section initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars} id="education" className="space-y-12">
+              <motion.h3 variants={itemVars} className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tight text-neutral-950 dark:text-neutral-50">
+                {t('education_title')} <span className="font-semibold">{t('education_highlight')}</span>
+              </motion.h3>
 
-                  <motion.h3 variants={itemVars} className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold mb-3 xs:mb-4 md:mb-6 tracking-tight z-10 relative text-neutral-900 dark:text-white">
-                    {t('contact_title_1')} <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-600">{t('contact_title_2')}</span>
-                  </motion.h3>
-                  
-                  <motion.p variants={itemVars} className="text-xs xs:text-sm md:text-lg text-neutral-700 dark:text-neutral-300 mb-6 xs:mb-8 max-w-2xl mx-auto z-10 relative leading-relaxed">
+              <div className="space-y-4">
+                {[
+                  { title: t('master_degree'), uni: 'Università degli Studi di Bari', spec: t('master_spec'), time: '2022 — 2024' },
+                  { title: t('bachelor_degree'), uni: 'Università degli Studi di Bari', spec: t('bachelor_spec'), time: '2019 — 2022' },
+                  { title: t('diploma'), uni: 'I.I.S.S. Galileo Ferraris', spec: '', time: '2014 — 2019' },
+                ].map((item, idx) => (
+                  <motion.div 
+                    variants={itemVars} 
+                    key={idx} 
+                    whileHover={{ backgroundColor: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }}
+                    className="group p-6 md:p-8 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-default"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="text-base md:text-lg font-semibold text-neutral-950 dark:text-neutral-50 pr-4">{item.title}</h4>
+                      <span className="text-xs opacity-50 font-medium whitespace-nowrap">{item.time}</span>
+                    </div>
+                    <p className="text-sm opacity-70 text-neutral-700 dark:text-neutral-400 mb-1">{item.uni}</p>
+                    {item.spec && <p className="text-xs opacity-60 text-neutral-600 dark:text-neutral-500">{item.spec}</p>}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+
+            {/* Experiences */}
+            <motion.section initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars} id="experiences" className="space-y-12">
+              <motion.h3 variants={itemVars} className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tight text-neutral-950 dark:text-neutral-50">
+                {t('experiences_title')}
+              </motion.h3>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {experiences.map((exp, idx) => (
+                  <motion.div 
+                    key={idx} 
+                    variants={itemVars} 
+                    whileHover={{ backgroundColor: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
+                    className="p-6 md:p-8 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
+                  >
+                    <h4 className="text-base md:text-lg font-semibold text-neutral-950 dark:text-neutral-50 mb-1">{exp.role}</h4>
+                    <p className="text-sm opacity-70 text-neutral-700 dark:text-neutral-400 mb-4">{exp.company} • {exp.time}</p>
+                    <p className="text-sm leading-relaxed opacity-80 text-neutral-700 dark:text-neutral-300 mb-6">{exp.desc}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {exp.tags.map(tag => (
+                        <span key={tag} className="px-3 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 text-xs font-medium">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+
+            {/* Skills */}
+            <motion.section initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars} id="skills" className="space-y-12">
+              <motion.h3 variants={itemVars} className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tight text-right text-neutral-950 dark:text-neutral-50">
+                {t('skills_arsenal')} <span className="font-semibold">{t('skills_title')}</span>
+              </motion.h3>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                {["React", "Next.js", "TypeScript", "Tailwind", "Node.js", "Framer", "Python", "SQL", "Git", "Docker", "Azure", "GCP"].map((s) => (
+                  <motion.div 
+                    key={s} 
+                    variants={itemVars}
+                    whileHover={{ scale: 1.05, backgroundColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
+                    className="p-4 rounded-xl border border-neutral-200/50 dark:border-neutral-800/50 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all text-center font-medium text-sm text-neutral-900 dark:text-neutral-100"
+                  >
+                    {s}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+
+            {/* Contact */}
+            <motion.section initial="hidden" whileInView="show" viewport={{ once: true }} variants={containerVars} id="contact" className="py-16 md:py-20">
+              <div className="text-center space-y-10">
+                <motion.div variants={itemVars} className="space-y-6">
+                  <h3 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-neutral-950 dark:text-neutral-50">
+                    {t('contact_title_1')}<br /><span className="font-semibold">{t('contact_title_2')}</span>
+                  </h3>
+                  <p className="text-base md:text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed">
                     {t('contact_text')}
-                  </motion.p>
+                  </p>
+                </motion.div>
 
-                  <motion.div variants={itemVars} className="inline-block z-10 relative mb-6 xs:mb-8">
-                    <a href="mailto:panunzioxmariangela@gmail.com" className="block px-4 xs:px-8 md:px-10 py-2.5 xs:py-4 md:py-5 bg-neutral-900 dark:bg-white text-white dark:text-black rounded-lg xs:rounded-full font-bold text-xs xs:text-base md:text-lg shadow-lg hover:shadow-pink-500/25 hover:scale-105 transition-all break-all xs:break-normal">
-                      panunzioxmariangela@gmail.com
-                    </a>
-                  </motion.div>
+                <motion.a 
+                  variants={itemVars}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href="mailto:panunzioxmariangela@gmail.com" 
+                  className="inline-block px-8 py-4 md:py-5 bg-neutral-950 dark:bg-neutral-50 text-white dark:text-black font-semibold rounded-xl hover:opacity-80 transition-all text-sm md:text-base"
+                >
+                  panunzioxmariangela@gmail.com
+                </motion.a>
 
-                  <motion.div variants={itemVars} className="flex justify-center gap-4 xs:gap-6 md:gap-8 z-10 relative text-lg xs:text-2xl md:text-3xl">
-                    <a href="https://www.linkedin.com/in/mariangela-panunzio-152817183/" target="_blank" rel="noopener noreferrer" className="text-neutral-800 dark:text-neutral-300 hover:text-pink-500 dark:hover:text-pink-400 transition-transform hover:-translate-y-1"><FaLinkedin /></a>
-                    <a href="https://github.com/mariangelapanunzio" target="_blank" rel="noopener noreferrer" className="text-neutral-800 dark:text-neutral-300 hover:text-pink-500 dark:hover:text-pink-400 transition-transform hover:-translate-y-1"><FaGithub /></a>
-                    <a href="mailto:panunzioxmariangela@gmail.com" className="text-neutral-800 dark:text-neutral-300 hover:text-pink-500 dark:hover:text-pink-400 transition-transform hover:-translate-y-1"><FaEnvelope /></a>
-                  </motion.div>
-                </div>
-              </motion.section>
+                <motion.div variants={itemVars} className="flex justify-center gap-8 pt-4">
+                  <motion.a 
+                    whileHover={{ scale: 1.2, y: -4 }}
+                    href="https://www.linkedin.com/in/mariangela-panunzio-152817183/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-2xl opacity-60 hover:opacity-100 transition-opacity text-neutral-900 dark:text-neutral-100"
+                  >
+                    <FaLinkedin />
+                  </motion.a>
+                  <motion.a 
+                    whileHover={{ scale: 1.2, y: -4 }}
+                    href="https://github.com/mariangelapanunzio" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-2xl opacity-60 hover:opacity-100 transition-opacity text-neutral-900 dark:text-neutral-100"
+                  >
+                    <FaGithub />
+                  </motion.a>
+                  <motion.a 
+                    whileHover={{ scale: 1.2, y: -4 }}
+                    href="mailto:panunzioxmariangela@gmail.com" 
+                    className="text-2xl opacity-60 hover:opacity-100 transition-opacity text-neutral-900 dark:text-neutral-100"
+                  >
+                    <FaEnvelope />
+                  </motion.a>
+                </motion.div>
+              </div>
+            </motion.section>
 
-              {/* FOOTER */}
-              <motion.footer variants={itemVars} className="flex flex-col xs:flex-row justify-between items-center xs:items-end border-t border-neutral-300 dark:border-neutral-800 pt-6 xs:pt-8 text-[10px] xs:text-xs md:text-sm opacity-50 dark:opacity-50 font-mono gap-3 xs:gap-0">
-                <div className="text-center xs:text-left">
-                  <p>© {new Date().getFullYear()} {t('name')}.</p>
-                  <p>{t('footer_crafted')}.</p>
-                </div>
-                <div className="text-center xs:text-right">
-                  <p>Local time: {new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</p>
-                  <p>{t('city')}</p>
-                </div>
-              </motion.footer>
-            </motion.div>
-          </main>
-
-          {/* Scroll To Top */}
-          {showScrollTop && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="fixed bottom-4 xs:bottom-6 right-4 xs:right-6 w-10 xs:w-12 h-10 xs:h-12 flex items-center justify-center rounded-full bg-pink-500 text-white shadow-lg hover:bg-pink-600 hover:scale-110 transition-all z-50 text-sm xs:text-base"
-            >
-              ↑
-            </motion.button>
-          )}
+            {/* Footer */}
+            <motion.footer variants={itemVars} className="text-center pt-12 border-t border-neutral-200/50 dark:border-neutral-800/50 opacity-60 text-sm font-light text-neutral-700 dark:text-neutral-400">
+              <p>© {new Date().getFullYear()} {t('name')} • {t('footer_crafted')}</p>
+            </motion.footer>
+          </motion.div>
         </div>
+
+        {/* AI Widget */}
+        <AIWidget lang={lang} dark={dark} />
+
+        {/* Scroll to top */}
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-neutral-950 dark:bg-neutral-50 text-neutral-50 dark:text-neutral-950 shadow-2xl transition-all flex items-center justify-center font-bold z-30"
+          >
+            ↑
+          </motion.button>
+        )}
       </div>
     );
 }
